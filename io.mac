@@ -1,0 +1,251 @@
+;===============================================================================
+;
+; FILE:              io.mac
+;
+; ASSEMBLY:         nasm -f elf analyze_func.asm
+; TO LINK:          ld -m elf_i386 -s -o analyze_func analyze_func.o cs219_io.o
+; MAKE:             To make, type "make", to clean, "make clean"
+;                       clean will remove objects generated only for this file.
+;
+; TO RUN:i	   ./analyze_func
+;
+; DESCRIPTION:     This file implements the macros for input and output of polynomials
+;			for use by analyze_func.asm
+;
+; MODIFICATION HISTORY:
+;
+; Author                 Date             Version
+;================================================================================
+; Shawn Ray              2018-03-31       Version 1.0
+; Shawn Ray              2018-03-31       Version 1.1 print macro
+; Shawn Ray              2018-04-01       Version 1.2 scan macro
+; Shawn Ray              2018-04-02       Version 1.3 clear_regs macro
+; Shawn Ray              2018-04-04       Version 1.4
+; Shawn Ray              2018-04-09       Version 1.5 added show_array
+; Shawn Ray              2018-04-25       Version 1.6 added show_func
+; Shawn Ray              2018-04-28       Version 1.7 
+; Shawn Ray              2018-04-28       Version 1.8 fixed show_func
+; Shawn Ray              2018-04-28       Version 1.9
+; Shawn Ray              2018-04-28       Version 2.0 include guards
+; Shawn Ray              2018-04-28       Version 2.1 define statements
+; Shawn Ray              2018-04-28       Version 2.2 
+; Shawn Ray              2018-04-29       Version 2.3 
+; Shawn Ray              2018-04-29       Version 2.4 
+;================================================================================
+
+
+%ifndef __io_mac__
+%define __io_mac__
+;===============================================================================
+;Macro Definition: 	show_array
+;Description: 		Prints the array passed to it
+;Parameters: 		3 (%1 = display message) (%2 = array)  (%3 = size of array)
+;================================================================================
+
+%macro show_array 3
+	
+	mov ebx, %2			; ebx = pointer to array
+	mov ecx, %3			; ecx = size of array
+	
+	mov edx, %1			; edx = display message
+	call display_loop_array
+	 ret
+
+%ifndef __show__
+%define __show__
+
+  display_loop_array:				; loop for displaying the message and int
+	
+	call string_loop_array
+	 ret	
+  string_loop_array:			; loop for displaying the chars in message
+	mov al, [edx]                   ; move a byte from reg(edx) to al
+        inc edx                         ; increment to next byte
+
+	PutCh al			; print the character
+
+	cmp al,  0			; if (al == 0) *NULL terminator*
+	 jnz string_loop_array 		; if not, keep printing characters
+
+	PutLInt	[ebx]			; display value at array[i]
+	
+	add	ebx, 4			; increment array point
+	loop	display_loop_array		
+		
+;	 ret
+
+
+
+%endif ; __show__
+
+%endmacro
+
+
+;===============================================================================
+;Macro Definition:      show_func
+;Description:           Prints the array and input passed to it
+;Parameters:            4 (%1 = display message) (%2 = array)  (%3 = size of array)
+;			   (%4 = int to print)
+;================================================================================
+
+%macro show_func 4
+
+        mov ebx, %2                     ; ebx = pointer to array
+        mov ecx, %3                     ; ecx = size of array
+
+        mov edx, %1                     ; edx = display message
+        call display_loop_func
+         ret
+
+%ifndef __func__
+%define __func__
+
+  display_loop_func:                    ; loop for displaying the message and int
+	
+	call string_loop_func
+         ret
+
+  string_loop_func:                    ; loop for displaying the chars in message
+        mov al, [edx]                   ; move a byte from reg(edx) to al
+        inc edx                         ; increment to next byte
+
+	cmp al, 64			; if (al == @) *sentinel*
+	 je print_int_func		; jump to print int 
+
+	PutCh al                        ; print the character
+ 
+        cmp al,  0                      ; if (al == 0) *NULL terminator*
+         jnz string_loop_func           ; if not, keep printing characters
+	jmp over_func			; jump over print_int
+
+   print_int_func:
+	PutLInt %4			; print the x value
+
+	jmp string_loop_func		; jump back to print characters
+   over_func:
+        
+	PutLInt [ebx]                   ; display value at array[i]
+        add     ebx, 4                  ; increment array point
+        loop    display_loop_func
+	; ret
+
+
+
+%endif ; __func__
+
+%endmacro
+
+;===============================================================================
+;Macro Definition:      show_func2
+;Description:           Prints the array and input passed to it
+;Parameters:            4 (%1 = display message) (%2 = array)  (%3 = size of array)
+;                          (%4 = int to print)
+;================================================================================
+
+%macro show_func2 4
+
+        mov ebx, %2                     ; ebx = pointer to array
+        mov ecx, %3                     ; ecx = size of array
+
+        mov edx, %1                     ; edx = display message
+        call display_loop_func2
+         ret
+
+%ifndef __func2__
+%define __func2__
+
+  display_loop_func2:                   ; loop for displaying the message and int
+
+        call string_loop_func2
+         ret
+
+  string_loop_func2:                    ; loop for displaying the chars in message
+        mov al, [edx]                   ; move a byte from reg(edx) to al
+        inc edx                         ; increment to next byte
+
+        cmp al, 64                      ; if (al == @) *sentinel*
+         je print_int_func2             ; jump to print int
+
+        PutCh al                        ; print the character
+
+        cmp al,  0                      ; if (al == 0) *NULL terminator*
+         jnz string_loop_func2          ; if not, keep printing characters
+        jmp over_func2                  ; jump over print_int
+
+   print_int_func2:
+        PutLInt %4                      ; print the x value
+
+        jmp string_loop_func2           ; jump back to print characters
+   over_func2:
+
+        PutLInt [ebx]                   ; display value at array[i]
+        add     ebx, 4                  ; increment array point
+        loop    display_loop_func2
+    ;     ret
+
+
+
+%endif ; __func2__
+
+%endmacro
+
+
+;===============================================================================
+;Macro Definition: print
+;Description: prints to whatever descriptor referencse it (sys_write) (file_write)
+;Parameters: 4
+;================================================================================
+ %macro print 4
+
+        mov eax, %1             ; The system call for write (sys_write) or (file_write)
+        mov ebx, %2             ; File descriptor 1 - standard output
+        mov ecx, %3             ; passed string to location ecx for descriptor
+        mov edx, %4             ; lenght of passed string
+         int 80h                ; Execute
+
+ %endmacro
+
+
+
+;===============================================================================
+;Macro Definition: scan
+;Description: scans a value and stored in first parameter (sys_read)
+;Parameters: 2
+;================================================================================
+
+ %macro scan 2
+	
+	mov eax, 3		; The system call for read (sys_read)
+	mov ebx, 2		; File descriptor 2 - standard input
+	mov ecx, %1		; location (memory) to be stored
+	mov edx, %2		; size of location (memory)
+	 int 80h		; Execute
+
+ %endmacro
+
+;===============================================================================
+;Macro Definition: clear_regs
+;Description: clears all the *general* registers and sets them to logic zero
+;Parameters: 0
+;================================================================================
+
+ %macro clear_regs 0
+        xor eax, eax
+        xor ebx, ebx
+        xor ecx, ecx
+        xor edx, edx
+	xor ax , ax
+	xor bx , bx
+	xor cx , cx
+	xor dx , dx
+	xor ah , ah
+        xor bh , bh
+        xor ch , ch
+        xor dh , dh
+	xor al , al
+        xor bl , bl
+        xor cl , cl
+        xor dl , dl
+ %endmacro
+
+%endif ; __io_mac__
